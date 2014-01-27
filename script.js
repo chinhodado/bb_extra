@@ -1,11 +1,15 @@
 // ==UserScript==
 // @name         bb_extra
-// @version      0.1
+// @version      0.2
 // @description  Display extra information in the Blood Brothers wikia familiar pages
 // @include      http://bloodbrothersgame.wikia.com/wiki/*
 // @copyright    2014, Chin
 // @run-at       document-end
 // ==/UserScript==
+
+var displayTotalPE = true;
+var displayTier    = true;
+var displaySkill   = true;
  
 function numberWithCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -33,7 +37,6 @@ function addTotalPEStats() {
     //var addedPETotalText = "<td>" + numberWithCommas(totalPE) + "</td>";
     //rowPE.innerHTML += addedPETotalText;
 }
-
 
 function getPVPTierInfo () {
 
@@ -135,5 +138,51 @@ function addTierInfo () {
     (table.getElementsByTagName("tbody"))[0].innerHTML += newText;
 }
 
-addTotalPEStats();
-addTierInfo();
+function addSkillInfo () {
+
+    // fetch the skill page
+    var skillList = (((document.getElementsByClassName("infobox"))[0].getElementsByTagName("tr"))[3]).getElementsByTagName("a");
+
+    var skillLink1 = skillList[0].getAttribute("href")
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.open("GET", skillLink1, false);
+    xmlhttp.send();
+
+    // parse the response text into DOM
+    var doc = document.implementation.createHTMLDocument("Skill");
+    doc.documentElement.innerHTML = xmlhttp.responseText;
+
+    // get the skill info box
+    var infoBox = (doc.getElementsByClassName("infobox"))[0];
+
+    // insert the skill box to the side
+    var rightSection = document.getElementById("WikiaRail");
+    rightSection.appendChild(infoBox);
+
+    // if there's a second skill, add it too
+    if (!(typeof skillList[1] === 'undefined')) {
+
+        var skillLink2 = skillList[1].getAttribute("href")
+        xmlhttp.open("GET", skillLink2, false);
+        xmlhttp.send();
+
+        // parse the response text into DOM
+        doc = document.implementation.createHTMLDocument("Skill");
+        doc.documentElement.innerHTML = xmlhttp.responseText;
+
+        // get the skill info box
+        infoBox = (doc.getElementsByClassName("infobox"))[0];
+
+        // insert the skill box to the side
+        rightSection.appendChild(infoBox);
+    }
+}
+
+try {
+    if (displayTotalPE) addTotalPEStats();
+    if (displayTier) addTierInfo();
+    if (displaySkill) addSkillInfo();
+}
+catch (err) {
+    console.log("bb_extra error: probably not a fam page");
+}
