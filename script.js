@@ -1,77 +1,113 @@
 // ==UserScript==
 // @name         bb_extra
-// @version      0.3
+// @version      0.4
 // @description  Display extra information in the Blood Brothers wikia familiar pages
 // @include      http://bloodbrothersgame.wikia.com/wiki/*
 // @copyright    2014, Chin
 // @run-at       document-end
 // ==/UserScript==
 
-var displayTotalPE = true;
-var displayTier    = true;
-var displaySkill   = true;
-var displayPOPE    = true;
+/////////////////////////////////////////////////////////////////////////////////////
+// Preference section
+// Change to false if you don't want something to be displayed
+/////////////////////////////////////////////////////////////////////////////////////
+
+var displayTotalPE     = true;
+var displayTotalPOPE   = true;
+var displayTier        = true;
+var displaySkill       = true;
+var displayPOPE        = true;
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Code section
+/////////////////////////////////////////////////////////////////////////////////////
+
+var data = {
+    hpPE:    0,
+    atkPE:   0,
+    defPE:   0,
+    wisPE:   0,
+    agiPE:   0,
+    hpPOPE:  0,
+    atkPOPE: 0,
+    defPOPE: 0,
+    wisPOPE: 0,
+    agiPOPE: 0,
+    category: ""
+    statTable: ""
+};
 
 function numberWithCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-function addPOPEStats() {
-    var category = ((document.getElementsByClassName("name"))[0].getElementsByTagName("a"))[0].childNodes[0].nodeValue;
+function getStats () {
+    data.statTable = document.getElementsByClassName("article-table");
+    var rowPE = ((data.statTable[0].getElementsByTagName("tbody"))[0].getElementsByTagName("tr"))[3];
+    
+    //PE stats
+    data.hpPE  = parseInt((rowPE.getElementsByTagName("td"))[1].childNodes[0].nodeValue.replace(/,/g, ""));
+    data.atkPE = parseInt((rowPE.getElementsByTagName("td"))[2].childNodes[0].nodeValue.replace(/,/g, ""));
+    data.defPE = parseInt((rowPE.getElementsByTagName("td"))[3].childNodes[0].nodeValue.replace(/,/g, ""));
+    data.wisPE = parseInt((rowPE.getElementsByTagName("td"))[4].childNodes[0].nodeValue.replace(/,/g, ""));
+    data.agiPE = parseInt((rowPE.getElementsByTagName("td"))[5].childNodes[0].nodeValue.replace(/,/g, ""));
+
+    data.category = ((document.getElementsByClassName("name"))[0].getElementsByTagName("a"))[0].childNodes[0].nodeValue;
     var toAdd;
-    if (category == "Epic 4") toAdd = 667; //POPE
-    else if (category == "Epic 2") toAdd = 550; //OPE100
-    else if (category == "Legendary 2") toAdd = 550; //OPE100
-    else if (category == "Mythic 2") toAdd = 550; //OPE100
+    if (data.category == "Epic 4") toAdd = 666;           //POPE
+    else if (data.category == "Epic 2") toAdd = 550;      //OPE100
+    else if (data.category == "Legendary 2") toAdd = 550; //OPE100
+    else if (data.category == "Mythic 2") toAdd = 550;    //OPE100
 
-    if (category == "Epic 4" || category == "Epic 2" || category == "Legendary 2" || category == "Mythic 2"){
-        //TODO: reuse the code...
-        var table = document.getElementsByClassName("article-table");
-        var rowPE = ((table[0].getElementsByTagName("tbody"))[0].getElementsByTagName("tr"))[3];
-         
-        var hpPE  = parseInt((rowPE.getElementsByTagName("td"))[1].childNodes[0].nodeValue.replace(/,/g, ""));
-        var atkPE = parseInt((rowPE.getElementsByTagName("td"))[2].childNodes[0].nodeValue.replace(/,/g, ""));
-        var defPE = parseInt((rowPE.getElementsByTagName("td"))[3].childNodes[0].nodeValue.replace(/,/g, ""));
-        var wisPE = parseInt((rowPE.getElementsByTagName("td"))[4].childNodes[0].nodeValue.replace(/,/g, ""));
-        var agiPE = parseInt((rowPE.getElementsByTagName("td"))[5].childNodes[0].nodeValue.replace(/,/g, ""));
+    //POPE stats
+    data.hpPOPE  = data.hpPE + toAdd;
+    data.atkPOPE = data.atkPE + toAdd;
+    data.defPOPE = data.defPE + toAdd;
+    data.wisPOPE = data.wisPE + toAdd;
+    data.agiPOPE = data.agiPE + toAdd;
+}
 
-        //POPE stats
+function addPOPEStats() {
 
-        var hpPOPE  = hpPE + toAdd;
-        var atkPOPE = atkPE + toAdd;
-        var defPOPE = defPE + toAdd;
-        var wisPOPE = wisPE + toAdd;
-        var agiPOPE = agiPE + toAdd;
 
-        var newText = "<tr><td style='text-align:center;padding:0em;'><span style='border-bottom: 1px dotted; font-weight: bold; padding: 0em' title='POPE stats (OPE400 for EP4, OPE100 for EP2 and L2)'><a>POPE</a></span></td><td>"
-                        + numberWithCommas(hpPOPE) + "</td><td>"
-                        + numberWithCommas(atkPOPE) + "</td><td>"
-                        + numberWithCommas(defPOPE) + "</td><td>"
-                        + numberWithCommas(wisPOPE) + "</td><td>"
-                        + numberWithCommas(agiPOPE) + "</td></tr>";
+    if (data.category == "Epic 4" || data.category == "Epic 2" || data.category == "Legendary 2" || data.category == "Mythic 2"){
+
+        var newText = "<tr><td style='text-align:center;padding:0em;'><span style='border-bottom: 1px dotted; font-weight: bold; padding: 0em' title='POPE stats (OPE400 for EP4, OPE100 for EP2, L2 and M2)'><a>POPE</a></span></td><td>"
+                        + numberWithCommas(data.hpPOPE) + "</td><td>"
+                        + numberWithCommas(data.atkPOPE) + "</td><td>"
+                        + numberWithCommas(data.defPOPE) + "</td><td>"
+                        + numberWithCommas(data.wisPOPE) + "</td><td>"
+                        + numberWithCommas(data.agiPOPE) + "</td></tr>";
          
         // add the new row to tbody
-        (table[0].getElementsByTagName("tbody"))[0].innerHTML += newText;
+        (data.statTable[0].getElementsByTagName("tbody"))[0].innerHTML += newText;
     }
 }
  
-function addTotalPEStats() {
-    var table = document.getElementsByClassName("article-table");
-    var rowPE = ((table[0].getElementsByTagName("tbody"))[0].getElementsByTagName("tr"))[3];
+function addTotalStats() {
      
-    var hpPE  = parseInt((rowPE.getElementsByTagName("td"))[1].childNodes[0].nodeValue.replace(/,/g, ""));
-    var atkPE = parseInt((rowPE.getElementsByTagName("td"))[2].childNodes[0].nodeValue.replace(/,/g, ""));
-    var defPE = parseInt((rowPE.getElementsByTagName("td"))[3].childNodes[0].nodeValue.replace(/,/g, ""));
-    var wisPE = parseInt((rowPE.getElementsByTagName("td"))[4].childNodes[0].nodeValue.replace(/,/g, ""));
-    var agiPE = parseInt((rowPE.getElementsByTagName("td"))[5].childNodes[0].nodeValue.replace(/,/g, ""));
-     
-    var totalPE = hpPE + atkPE + defPE + wisPE + agiPE;
+    var totalPE = data.hpPE + data.atkPE + data.defPE + data.wisPE + data.agiPE;
     var totalPEText = isNaN(totalPE)? "N/A" : numberWithCommas(totalPE);
-     
-    var newText = "<tr><td style='text-align:center;padding:0em;'><span style='border-bottom: 1px dotted; font-weight: bold; padding: 0em' title='Total PE stats'><a>Total</a></span></td><td></td><td></td><td></td><td></td><td>" + totalPEText + "</td></tr>";
-     
+
+    var totalPOPE = data.hpPOPE + data.atkPOPE + data.defPOPE + data.wisPOPE + data.agiPOPE;
+    var totalPOPEText = isNaN(totalPOPE)? "N/A" : numberWithCommas(totalPOPE);
+    
+    var newText = "";
+
+    if (!displayTotalPOPE && displayTotalPE)
+        newText = "<tr><td style='text-align:center;padding:0em;'><span style='border-bottom: 1px dotted; font-weight: bold; padding: 0em' title='Total PE stats'><a>Total</a></span></td><td></td><td></td><td></td><td></td><td>" 
+                  + totalPEText + "</td></tr>";
+    else if (displayTotalPOPE && !displayTotalPE)
+        newText = "<tr><td style='text-align:center;padding:0em;'><span style='border-bottom: 1px dotted; font-weight: bold; padding: 0em' title='Total POPE stats'><a>Total</a></span></td><td></td><td></td><td></td><td></td><td>" 
+                  + totalPOPEText + "</td></tr>";
+    else if (displayTotalPOPE && displayTotalPE)
+        newText = "<tr><td style='text-align:center;padding:0em;'><span style='border-bottom: 1px dotted; font-weight: bold; padding: 0em' title='Total PE stats and total POPE stats'><a>Total</a></span></td><td></td><td></td><td></td><td>"
+                  + totalPEText + "</td><td>" 
+                  + totalPOPEText + "</td></tr>";
+
     // add the new row to tbody
-    (table[0].getElementsByTagName("tbody"))[0].innerHTML += newText;
+    (data.statTable[0].getElementsByTagName("tbody"))[0].innerHTML += newText;
 
     // or add it directly to the PE row, but can cause overflow in small screens
     //var addedPETotalText = "<td>" + numberWithCommas(totalPE) + "</td>";
@@ -183,7 +219,7 @@ function addSkillInfo () {
     // fetch the skill page
     var skillList = (((document.getElementsByClassName("infobox"))[0].getElementsByTagName("tr"))[3]).getElementsByTagName("a");
 
-    var skillLink1 = skillList[0].getAttribute("href")
+    var skillLink1 = skillList[0].getAttribute("href");
     var xmlhttp = new XMLHttpRequest();
     xmlhttp.open("GET", skillLink1, false);
     xmlhttp.send();
@@ -202,7 +238,7 @@ function addSkillInfo () {
     // if there's a second skill, add it too
     if (!(typeof skillList[1] === 'undefined')) {
 
-        var skillLink2 = skillList[1].getAttribute("href")
+        var skillLink2 = skillList[1].getAttribute("href");
         xmlhttp.open("GET", skillLink2, false);
         xmlhttp.send();
 
@@ -219,8 +255,9 @@ function addSkillInfo () {
 }
 
 try {
+    if (displayPOPE || displayTotalPE) getStats();
     if (displayPOPE) addPOPEStats();
-    if (displayTotalPE) addTotalPEStats();
+    if (displayTotalPE || displayTotalPOPE) addTotalStats();
     if (displayTier) addTierInfo();
     if (displaySkill) addSkillInfo();
 }
