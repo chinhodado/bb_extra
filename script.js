@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         bb_extra
-// @version      0.2
+// @version      0.3
 // @description  Display extra information in the Blood Brothers wikia familiar pages
 // @include      http://bloodbrothersgame.wikia.com/wiki/*
 // @copyright    2014, Chin
@@ -10,9 +10,49 @@
 var displayTotalPE = true;
 var displayTier    = true;
 var displaySkill   = true;
- 
+var displayPOPE    = true;
+
 function numberWithCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function addPOPEStats() {
+    var category = ((document.getElementsByClassName("name"))[0].getElementsByTagName("a"))[0].childNodes[0].nodeValue;
+    var toAdd;
+    if (category == "Epic 4") toAdd = 667; //POPE
+    else if (category == "Epic 2") toAdd = 550; //OPE100
+    else if (category == "Legendary 2") toAdd = 550; //OPE100
+    else if (category == "Mythic 2") toAdd = 550; //OPE100
+
+    if (category == "Epic 4" || category == "Epic 2" || category == "Legendary 2" || category == "Mythic 2"){
+        //TODO: reuse the code...
+        var table = document.getElementsByClassName("article-table");
+        var rowPE = ((table[0].getElementsByTagName("tbody"))[0].getElementsByTagName("tr"))[3];
+         
+        var hpPE  = parseInt((rowPE.getElementsByTagName("td"))[1].childNodes[0].nodeValue.replace(/,/g, ""));
+        var atkPE = parseInt((rowPE.getElementsByTagName("td"))[2].childNodes[0].nodeValue.replace(/,/g, ""));
+        var defPE = parseInt((rowPE.getElementsByTagName("td"))[3].childNodes[0].nodeValue.replace(/,/g, ""));
+        var wisPE = parseInt((rowPE.getElementsByTagName("td"))[4].childNodes[0].nodeValue.replace(/,/g, ""));
+        var agiPE = parseInt((rowPE.getElementsByTagName("td"))[5].childNodes[0].nodeValue.replace(/,/g, ""));
+
+        //POPE stats
+
+        var hpPOPE  = hpPE + toAdd;
+        var atkPOPE = atkPE + toAdd;
+        var defPOPE = defPE + toAdd;
+        var wisPOPE = wisPE + toAdd;
+        var agiPOPE = agiPE + toAdd;
+
+        var newText = "<tr><td style='text-align:center;padding:0em;'><span style='border-bottom: 1px dotted; font-weight: bold; padding: 0em' title='POPE stats (OPE400 for EP4, OPE100 for EP2 and L2)'><a>POPE</a></span></td><td>"
+                        + numberWithCommas(hpPOPE) + "</td><td>"
+                        + numberWithCommas(atkPOPE) + "</td><td>"
+                        + numberWithCommas(defPOPE) + "</td><td>"
+                        + numberWithCommas(wisPOPE) + "</td><td>"
+                        + numberWithCommas(agiPOPE) + "</td></tr>";
+         
+        // add the new row to tbody
+        (table[0].getElementsByTagName("tbody"))[0].innerHTML += newText;
+    }
 }
  
 function addTotalPEStats() {
@@ -179,6 +219,7 @@ function addSkillInfo () {
 }
 
 try {
+    if (displayPOPE) addPOPEStats();
     if (displayTotalPE) addTotalPEStats();
     if (displayTier) addTierInfo();
     if (displaySkill) addSkillInfo();
