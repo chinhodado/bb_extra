@@ -34,7 +34,7 @@ var data = {
     defPOPE: 0,
     wisPOPE: 0,
     agiPOPE: 0,
-    category: ""
+    category: "",
     statTable: ""
 };
 
