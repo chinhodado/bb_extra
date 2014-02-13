@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         bb_extra
-// @version      0.4
+// @version      0.5
 // @description  Display extra information in the Blood Brothers wikia familiar pages
 // @include      http://bloodbrothersgame.wikia.com/wiki/*
 // @copyright    2014, Chin
@@ -70,7 +70,6 @@ function getStats () {
 
 function addPOPEStats() {
 
-
     if (data.category == "Epic 4" || data.category == "Epic 2" || data.category == "Legendary 2" || data.category == "Mythic 2"){
 
         var newText = "<tr><td style='text-align:center;padding:0em;'><span style='border-bottom: 1px dotted; font-weight: bold; padding: 0em' title='POPE stats (OPE400 for EP4, OPE100 for EP2, L2 and M2)'><a>POPE</a></span></td><td>"
@@ -118,7 +117,7 @@ function getPVPTierInfo () {
 
     // fetch the PVP tier list
     var xmlhttp = new XMLHttpRequest();
-    xmlhttp.open("GET", "http://bloodbrothersgame.wikia.com/wiki/Familiar_Tier_List/PvP", false);
+    xmlhttp.open("GET", "http://bloodbrothersgame.wikia.com/index.php?title=Familiar_Tier_List/PvP&action=render", false);
     xmlhttp.send();
 
     // parse the response text into DOM
@@ -148,7 +147,7 @@ function getRaidTierInfo () {
 
     // fetch the raid tier list
     var xmlhttp = new XMLHttpRequest();
-    xmlhttp.open("GET", "http://bloodbrothersgame.wikia.com/wiki/Familiar_Tier_List/Raid", false);
+    xmlhttp.open("GET", "http://bloodbrothersgame.wikia.com/index.php?title=Familiar_Tier_List/Raid&action=render", false);
     xmlhttp.send();
 
     // parse the response text into DOM
@@ -178,7 +177,7 @@ function getTowerTierInfo () {
 
     // fetch the tower tier list
     var xmlhttp = new XMLHttpRequest();
-    xmlhttp.open("GET", "http://bloodbrothersgame.wikia.com/wiki/Familiar_Tier_List/Tower", false);
+    xmlhttp.open("GET", "http://bloodbrothersgame.wikia.com/index.php?title=Familiar_Tier_List/Tower&action=render", false);
     xmlhttp.send();
 
     // parse the response text into DOM
