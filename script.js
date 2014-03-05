@@ -5,6 +5,7 @@
 // @include      http://bloodbrothersgame.wikia.com/wiki/*
 // @copyright    2014, Chin
 // @run-at       document-end
+// @grant       none
 // ==/UserScript==
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -55,10 +56,11 @@ function getStats () {
 
     data.category = ((document.getElementsByClassName("name"))[0].getElementsByTagName("a"))[0].childNodes[0].nodeValue;
     var toAdd;
-    if (data.category == "Epic 4") toAdd = 666;           //POPE
-    else if (data.category == "Epic 2") toAdd = 550;      //OPE100
-    else if (data.category == "Legendary 2") toAdd = 550; //OPE100
-    else if (data.category == "Mythic 2") toAdd = 550;    //OPE100
+    if (data.category == "Epic 4") toAdd = 666;           // POPE EP4
+    else if (data.category == "Epic 2") toAdd = 550;      // POPE EP2
+    else if (data.category == "Legendary 2") toAdd = 550; // POPE L2
+    else if (data.category == "Legendary 3") toAdd = 605; // POPE L3
+    else if (data.category == "Mythic 2") toAdd = 550;    // POPE M2
 
     //POPE stats
     data.hpPOPE  = data.hpPE + toAdd;
@@ -70,9 +72,13 @@ function getStats () {
 
 function addPOPEStats() {
 
-    if (data.category == "Epic 4" || data.category == "Epic 2" || data.category == "Legendary 2" || data.category == "Mythic 2"){
+    if (data.category == "Epic 4" || 
+        data.category == "Epic 2" || 
+        data.category == "Legendary 2" || 
+        data.category == "Legendary 3" || 
+        data.category == "Mythic 2"  ){
 
-        var newText = "<tr><td style='text-align:center;padding:0em;'><span style='border-bottom: 1px dotted; font-weight: bold; padding: 0em' title='POPE stats (OPE400 for EP4, OPE100 for EP2, L2 and M2)'><a>POPE</a></span></td><td>"
+        var newText = "<tr><td style='text-align:center;padding:0em;'><span style='border-bottom: 1px dotted; font-weight: bold; padding: 0em' title='POPE stats (OPE400 for EP4, OPE100 for EP2, L2, L3 and M2)'><a>POPE</a></span></td><td>"
                         + numberWithCommas(data.hpPOPE) + "</td><td>"
                         + numberWithCommas(data.atkPOPE) + "</td><td>"
                         + numberWithCommas(data.defPOPE) + "</td><td>"
@@ -261,5 +267,6 @@ try {
     if (displaySkill) addSkillInfo();
 }
 catch (err) {
+    console.log("error: " + err);
     console.log("bb_extra error: probably not a fam page");
 }
