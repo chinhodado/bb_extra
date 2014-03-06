@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         bb_extra
-// @version      0.5
+// @version      0.6
 // @description  Display extra information in the Blood Brothers wikia familiar pages
 // @include      http://bloodbrothersgame.wikia.com/wiki/*
 // @copyright    2014, Chin
