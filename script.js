@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         bb_extra
-// @version      0.6
+// @version      0.6.1
 // @description  Display extra information in the Blood Brothers wikia familiar pages
 // @include      http://bloodbrothersgame.wikia.com/wiki/*
 // @copyright    2014, Chin
 // @run-at       document-end
-// @grant       none
+// @grant        none
 // ==/UserScript==
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -122,13 +122,17 @@ function addTotalStats() {
 function getPVPTierInfo () {
 
     // fetch the PVP tier list
-    var xmlhttp = new XMLHttpRequest();
-    xmlhttp.open("GET", "http://bloodbrothersgame.wikia.com/index.php?title=Familiar_Tier_List/PvP&action=render", false);
-    xmlhttp.send();
-
+    if (sessionStorage.getItem('pvpHTML') == null) {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("GET", "http://bloodbrothersgame.wikia.com/index.php?title=Familiar_Tier_List/PvP&action=render", false);
+        xmlhttp.send();
+        sessionStorage.pvpHTML = xmlhttp.responseText;
+        console.log("Fetching pvp tier");
+    }
     // parse the response text into DOM
     var doc = document.implementation.createHTMLDocument("PVPTier");
-    doc.documentElement.innerHTML = xmlhttp.responseText;
+    doc.documentElement.innerHTML = sessionStorage.pvpHTML;
+
     var tables = doc.getElementsByClassName("wikitable");
 
     var found = false;
@@ -152,13 +156,17 @@ function getPVPTierInfo () {
 function getRaidTierInfo () {
 
     // fetch the raid tier list
-    var xmlhttp = new XMLHttpRequest();
-    xmlhttp.open("GET", "http://bloodbrothersgame.wikia.com/index.php?title=Familiar_Tier_List/Raid&action=render", false);
-    xmlhttp.send();
-
+    if (sessionStorage.getItem('raidHTML') == null) {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("GET", "http://bloodbrothersgame.wikia.com/index.php?title=Familiar_Tier_List/Raid&action=render", false);
+        xmlhttp.send();
+        sessionStorage.raidHTML = xmlhttp.responseText;
+        console.log("Fetching raid tier");
+    }
     // parse the response text into DOM
     var doc = document.implementation.createHTMLDocument("RaidTier");
-    doc.documentElement.innerHTML = xmlhttp.responseText;
+    doc.documentElement.innerHTML = sessionStorage.raidHTML;
+
     var tables = doc.getElementsByClassName("wikitable");
 
     var found = false;
@@ -182,13 +190,17 @@ function getRaidTierInfo () {
 function getTowerTierInfo () {
 
     // fetch the tower tier list
-    var xmlhttp = new XMLHttpRequest();
-    xmlhttp.open("GET", "http://bloodbrothersgame.wikia.com/index.php?title=Familiar_Tier_List/Tower&action=render", false);
-    xmlhttp.send();
-
+    if (sessionStorage.getItem('towerHTML') == null) {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("GET", "http://bloodbrothersgame.wikia.com/index.php?title=Familiar_Tier_List/Tower&action=render", false);
+        xmlhttp.send();
+        sessionStorage.towerHTML = xmlhttp.responseText;
+        console.log("Fetching tower tier");
+   } 
     // parse the response text into DOM
     var doc = document.implementation.createHTMLDocument("TowerTier");
-    doc.documentElement.innerHTML = xmlhttp.responseText;
+    doc.documentElement.innerHTML = sessionStorage.towerHTML;
+
     var tables = doc.getElementsByClassName("wikitable");
 
     var found = false;
