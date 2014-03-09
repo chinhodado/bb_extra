@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         bb_extra
-// @version      0.6.1
+// @version      0.6.2
 // @description  Display extra information in the Blood Brothers wikia familiar pages
 // @include      http://bloodbrothersgame.wikia.com/wiki/*
 // @copyright    2014, Chin
@@ -25,18 +25,27 @@ var displayPOPE        = true;
 /////////////////////////////////////////////////////////////////////////////////////
 
 var data = {
+    hpMax:   0,
+    atkMax:  0,
+    defMax:  0,
+    wisMax:  0,
+    agiMax:  0,
+
     hpPE:    0,
     atkPE:   0,
     defPE:   0,
     wisPE:   0,
     agiPE:   0,
+
     hpPOPE:  0,
     atkPOPE: 0,
     defPOPE: 0,
     wisPOPE: 0,
     agiPOPE: 0,
+
     category: "",
-    statTable: ""
+    statTable: "",
+    isFinalEvolution: false
 };
 
 var tierURL = new Array();
@@ -46,6 +55,10 @@ tierURL["tower"] = "http://bloodbrothersgame.wikia.com/index.php?title=Familiar_
 
 function numberWithCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function endsWith(str, suffix) {
+    return str.indexOf(suffix, str.length - suffix.length) !== -1;
 }
 
 function getStats () {
@@ -59,29 +72,46 @@ function getStats () {
     data.wisPE = parseInt((rowPE.getElementsByTagName("td"))[4].childNodes[0].nodeValue.replace(/,/g, ""));
     data.agiPE = parseInt((rowPE.getElementsByTagName("td"))[5].childNodes[0].nodeValue.replace(/,/g, ""));
 
-    data.category = ((document.getElementsByClassName("name"))[0].getElementsByTagName("a"))[0].childNodes[0].nodeValue;
-    var toAdd;
-    if (data.category == "Epic 4") toAdd = 666;           // POPE EP4
-    else if (data.category == "Epic 2") toAdd = 550;      // POPE EP2
-    else if (data.category == "Legendary 2") toAdd = 550; // POPE L2
-    else if (data.category == "Legendary 3") toAdd = 605; // POPE L3
-    else if (data.category == "Mythic 2") toAdd = 550;    // POPE M2
+    data.isFinalEvolution = (document.getElementsByClassName("container")[0]).innerHTML.indexOf("Final Evolution") != -1;
 
-    //POPE stats
-    data.hpPOPE  = data.hpPE + toAdd;
-    data.atkPOPE = data.atkPE + toAdd;
-    data.defPOPE = data.defPE + toAdd;
-    data.wisPOPE = data.wisPE + toAdd;
-    data.agiPOPE = data.agiPE + toAdd;
+    if (data.isFinalEvolution) {
+        data.category = ((document.getElementsByClassName("name"))[0].getElementsByTagName("a"))[0].childNodes[0].nodeValue;
+        var toAdd = 0;
+
+        if (endsWith(data.category, "1")) toAdd = 500;      // 1 star
+        else if (endsWith(data.category, "2")) toAdd = 550; // 2 star
+        else if (endsWith(data.category, "3")) toAdd = 605; // 3 star
+        else if (endsWith(data.category, "4")) toAdd = 666; // 4 star
+
+        //POPE stats
+        if (endsWith(data.category, "1")) {
+            // we generally don't care about the max stats, but in this case (1 star) we do
+            var rowMax = ((data.statTable[0].getElementsByTagName("tbody"))[0].getElementsByTagName("tr"))[2];
+            data.hpMax  = parseInt((rowMax.getElementsByTagName("td"))[1].childNodes[0].nodeValue.replace(/,/g, ""));
+            data.atkMax = parseInt((rowMax.getElementsByTagName("td"))[2].childNodes[0].nodeValue.replace(/,/g, ""));
+            data.defMax = parseInt((rowMax.getElementsByTagName("td"))[3].childNodes[0].nodeValue.replace(/,/g, ""));
+            data.wisMax = parseInt((rowMax.getElementsByTagName("td"))[4].childNodes[0].nodeValue.replace(/,/g, ""));
+            data.agiMax = parseInt((rowMax.getElementsByTagName("td"))[5].childNodes[0].nodeValue.replace(/,/g, ""));
+
+            data.hpPOPE  = data.hpMax  + toAdd;
+            data.atkPOPE = data.atkMax + toAdd;
+            data.defPOPE = data.defMax + toAdd;
+            data.wisPOPE = data.wisMax + toAdd;
+            data.agiPOPE = data.agiMax + toAdd;
+        }
+        else {
+            data.hpPOPE  = data.hpPE  + toAdd;
+            data.atkPOPE = data.atkPE + toAdd;
+            data.defPOPE = data.defPE + toAdd;
+            data.wisPOPE = data.wisPE + toAdd;
+            data.agiPOPE = data.agiPE + toAdd;
+        }
+    }
 }
 
 function addPOPEStats() {
 
-    if (data.category == "Epic 4" || 
-        data.category == "Epic 2" || 
-        data.category == "Legendary 2" || 
-        data.category == "Legendary 3" || 
-        data.category == "Mythic 2"  ){
+    if (data.isFinalEvolution) {
 
         var newText = "<tr><td style='text-align:center;padding:0em;'><span style='border-bottom: 1px dotted; font-weight: bold; padding: 0em' title='POPE stats (OPE400 for EP4, OPE100 for EP2, L2, L3 and M2)'><a>POPE</a></span></td><td>"
                         + numberWithCommas(data.hpPOPE) + "</td><td>"
@@ -98,10 +128,10 @@ function addPOPEStats() {
 function addTotalStats() {
      
     var totalPE = data.hpPE + data.atkPE + data.defPE + data.wisPE + data.agiPE;
-    var totalPEText = isNaN(totalPE)? "N/A" : numberWithCommas(totalPE);
+    var totalPEText = (isNaN(totalPE) || totalPE == 0)? "N/A" : numberWithCommas(totalPE);
 
     var totalPOPE = data.hpPOPE + data.atkPOPE + data.defPOPE + data.wisPOPE + data.agiPOPE;
-    var totalPOPEText = isNaN(totalPOPE)? "N/A" : numberWithCommas(totalPOPE);
+    var totalPOPEText = (isNaN(totalPOPE) || totalPOPE == 0)? "N/A" : numberWithCommas(totalPOPE);
     
     var newText = "";
 
