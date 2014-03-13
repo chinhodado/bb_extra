@@ -170,19 +170,15 @@ function getTierInfo (category) {
 
     var tables = doc.getElementsByClassName("wikitable");
 
-    var found = false;
     var tierResult = "N/A";
     var tiers = ['X', 'S+', 'S', 'A+', 'A', 'B', 'C', 'D', 'E'];
     var famName = (document.getElementById("WikiaPageHeader").getElementsByTagName("h1"))[0].innerHTML;
 
-    for (var i = 0; i < 9 && found == false; i++){ // 9 tables
-        var items = tables[i].getElementsByTagName("*");
-        for (var j = 0; j < items.length; j++) {
-            if (items[j].innerHTML == famName) {
-                found = true;
-                tierResult = tiers[i];
-                break;
-            }
+    for (var i = 0; i < 9; i++){ // 9 tables
+        var items = tables[i].innerHTML;
+        if (items.indexOf(famName) != -1) {
+            tierResult = tiers[i];
+            break;
         }
     }
     return tierResult;
