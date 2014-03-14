@@ -212,8 +212,8 @@ function addSkillInfo () {
     var infoBox = (doc.getElementsByClassName("infobox"))[0];
 
     // insert the skill box to the side
-    var rightSection = document.getElementById("WikiaRail");
-    rightSection.appendChild(infoBox);
+    var searchBox = document.getElementById("WikiaSearch");
+    var addedSkillBox1 = searchBox.parentNode.insertBefore(infoBox, searchBox.nextSibling);
 
     // if there's a second skill, add it too
     if (!(typeof skillList[1] === 'undefined')) {
@@ -230,7 +230,7 @@ function addSkillInfo () {
         infoBox = (doc.getElementsByClassName("infobox"))[0];
 
         // insert the skill box to the side
-        rightSection.appendChild(infoBox);
+        addedSkillBox1.parentNode.insertBefore(infoBox, addedSkillBox1.nextSibling);
     }
 }
 
