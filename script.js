@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         bb_extra
-// @version      0.6.2
+// @version      0.6.3
 // @description  Display extra information in the Blood Brothers wikia familiar pages
 // @include      http://bloodbrothersgame.wikia.com/wiki/*
 // @copyright    2014, Chin
@@ -200,13 +200,16 @@ function addSkillInfo () {
     var skillList = (((document.getElementsByClassName("infobox"))[0].getElementsByTagName("tr"))[3]).getElementsByTagName("a");
 
     var skillLink1 = skillList[0].getAttribute("href");
-    var xmlhttp = new XMLHttpRequest();
-    xmlhttp.open("GET", skillLink1, false);
-    xmlhttp.send();
+    if (sessionStorage[skillLink1] == null) {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("GET", skillLink1, false);
+        xmlhttp.send();
+        sessionStorage[skillLink1] = xmlhttp.responseText;
+    }
 
     // parse the response text into DOM
     var doc = document.implementation.createHTMLDocument("Skill");
-    doc.documentElement.innerHTML = xmlhttp.responseText;
+    doc.documentElement.innerHTML = sessionStorage[skillLink1];
 
     // get the skill info box
     var infoBox = (doc.getElementsByClassName("infobox"))[0];
@@ -219,12 +222,15 @@ function addSkillInfo () {
     if (!(typeof skillList[1] === 'undefined')) {
 
         var skillLink2 = skillList[1].getAttribute("href");
-        xmlhttp.open("GET", skillLink2, false);
-        xmlhttp.send();
+        if (sessionStorage[skillLink2] == null) {
+            xmlhttp.open("GET", skillLink2, false);
+            xmlhttp.send();
+            sessionStorage[skillLink2] = xmlhttp.responseText;
+        }
 
         // parse the response text into DOM
         doc = document.implementation.createHTMLDocument("Skill");
-        doc.documentElement.innerHTML = xmlhttp.responseText;
+        doc.documentElement.innerHTML = sessionStorage[skillLink2];
 
         // get the skill info box
         infoBox = (doc.getElementsByClassName("infobox"))[0];
