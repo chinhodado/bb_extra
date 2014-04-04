@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         bb_extra
-// @version      0.6.3
+// @version      0.6.4
 // @description  Display extra information in the Blood Brothers wikia familiar pages
 // @include      http://bloodbrothersgame.wikia.com/wiki/*
 // @copyright    2014, Chin
@@ -75,36 +75,32 @@ function getStats () {
     data.isFinalEvolution = (document.getElementsByClassName("container")[0]).innerHTML.indexOf("Final Evolution") != -1;
 
     if (data.isFinalEvolution) {
-        data.category = ((document.getElementsByClassName("name"))[0].getElementsByTagName("a"))[0].childNodes[0].nodeValue;
-        var toAdd = 0;
-
-        if (endsWith(data.category, "1")) toAdd = 500;      // 1 star
-        else if (endsWith(data.category, "2")) toAdd = 550; // 2 star
-        else if (endsWith(data.category, "3")) toAdd = 605; // 3 star
-        else if (endsWith(data.category, "4")) toAdd = 666; // 4 star
-
-        //POPE stats
-        if (endsWith(data.category, "1")) {
-            // we generally don't care about the max stats, but in this case (1 star) we do
-            var rowMax = ((data.statTable[0].getElementsByTagName("tbody"))[0].getElementsByTagName("tr"))[2];
-            data.hpMax  = parseInt((rowMax.getElementsByTagName("td"))[1].childNodes[0].nodeValue.replace(/,/g, ""));
-            data.atkMax = parseInt((rowMax.getElementsByTagName("td"))[2].childNodes[0].nodeValue.replace(/,/g, ""));
-            data.defMax = parseInt((rowMax.getElementsByTagName("td"))[3].childNodes[0].nodeValue.replace(/,/g, ""));
-            data.wisMax = parseInt((rowMax.getElementsByTagName("td"))[4].childNodes[0].nodeValue.replace(/,/g, ""));
-            data.agiMax = parseInt((rowMax.getElementsByTagName("td"))[5].childNodes[0].nodeValue.replace(/,/g, ""));
-
-            data.hpPOPE  = data.hpMax  + toAdd;
-            data.atkPOPE = data.atkMax + toAdd;
-            data.defPOPE = data.defMax + toAdd;
-            data.wisPOPE = data.wisMax + toAdd;
-            data.agiPOPE = data.agiMax + toAdd;
+        // fetch the POPE stat table
+        if (sessionStorage["popeTable"] == null) {
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.open("GET", "http://bloodbrothersgame.wikia.com/wiki/POPE_Stats_Table", false);
+            xmlhttp.send();
+            sessionStorage["popeTable"] = xmlhttp.responseText;
+            console.log("Fetching POPE table");
         }
-        else {
-            data.hpPOPE  = data.hpPE  + toAdd;
-            data.atkPOPE = data.atkPE + toAdd;
-            data.defPOPE = data.defPE + toAdd;
-            data.wisPOPE = data.wisPE + toAdd;
-            data.agiPOPE = data.agiPE + toAdd;
+        // parse the response text into DOM
+        var doc = document.implementation.createHTMLDocument("POPE");
+        doc.documentElement.innerHTML = sessionStorage["popeTable"];
+
+        var famName = (document.getElementById("WikiaPageHeader").getElementsByTagName("h1"))[0].innerHTML.trim();
+        var table = (doc.getElementsByClassName("wikitable"))[0];
+        var rows = (table.getElementsByTagName("tbody"))[0].getElementsByTagName("tr");
+
+        for (var i = rows.length - 1; i >= 2; i--) {
+            var cells = rows[i].getElementsByTagName("td");
+            var cellFam = (cells[1].innerText || cells[1].textContent).trim();
+            if (cellFam == famName) {
+                data.hpPOPE  = parseInt((cells[3].innerText || cells[3].textContent).replace(/,/g, ""));
+                data.atkPOPE = parseInt((cells[4].innerText || cells[4].textContent).replace(/,/g, ""));
+                data.defPOPE = parseInt((cells[5].innerText || cells[5].textContent).replace(/,/g, ""));
+                data.wisPOPE = parseInt((cells[6].innerText || cells[6].textContent).replace(/,/g, ""));
+                data.agiPOPE = parseInt((cells[7].innerText || cells[7].textContent).replace(/,/g, ""));
+            }
         }
     }
 }
