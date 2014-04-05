@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         bb_extra
-// @version      0.6.4
+// @version      0.6.4.1
 // @description  Display extra information in the Blood Brothers wikia familiar pages
 // @include      http://bloodbrothersgame.wikia.com/wiki/*
 // @copyright    2014, Chin
@@ -92,15 +92,17 @@ function getStats () {
         var rows = (table.getElementsByTagName("tbody"))[0].getElementsByTagName("tr");
 
         for (var i = rows.length - 1; i >= 2; i--) {
-            var cells = rows[i].getElementsByTagName("td");
-            var cellFam = (cells[1].innerText || cells[1].textContent).trim();
-            if (cellFam == famName) {
-                data.hpPOPE  = parseInt((cells[3].innerText || cells[3].textContent).replace(/,/g, ""));
-                data.atkPOPE = parseInt((cells[4].innerText || cells[4].textContent).replace(/,/g, ""));
-                data.defPOPE = parseInt((cells[5].innerText || cells[5].textContent).replace(/,/g, ""));
-                data.wisPOPE = parseInt((cells[6].innerText || cells[6].textContent).replace(/,/g, ""));
-                data.agiPOPE = parseInt((cells[7].innerText || cells[7].textContent).replace(/,/g, ""));
-            }
+            try {
+                var cells = rows[i].getElementsByTagName("td");
+                var cellFam = (cells[1].innerText || cells[1].textContent).trim();
+                if (cellFam == famName) {
+                    data.hpPOPE  = parseInt((cells[3].innerText || cells[3].textContent).replace(/,/g, ""));
+                    data.atkPOPE = parseInt((cells[4].innerText || cells[4].textContent).replace(/,/g, ""));
+                    data.defPOPE = parseInt((cells[5].innerText || cells[5].textContent).replace(/,/g, ""));
+                    data.wisPOPE = parseInt((cells[6].innerText || cells[6].textContent).replace(/,/g, ""));
+                    data.agiPOPE = parseInt((cells[7].innerText || cells[7].textContent).replace(/,/g, ""));
+                }
+            } catch (e) {}
         }
     }
 }
