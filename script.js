@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         bb_extra
-// @version      0.6.4.1
+// @version      0.6.5
 // @description  Display extra information in the Blood Brothers wikia familiar pages
 // @include      http://bloodbrothersgame.wikia.com/wiki/*
 // @copyright    2014, Chin
@@ -43,6 +43,10 @@ var data = {
     wisPOPE: 0,
     agiPOPE: 0,
 
+    pvpTier: "N/A",
+    raidTier: "N/A",
+    towerTier: "N/A",
+
     category: "",
     statTable: "",
     isFinalEvolution: false
@@ -78,31 +82,44 @@ function getStats () {
         // fetch the POPE stat table
         if (sessionStorage["popeTable"] == null) {
             var xmlhttp = new XMLHttpRequest();
-            xmlhttp.open("GET", "http://bloodbrothersgame.wikia.com/wiki/POPE_Stats_Table", false);
+            xmlhttp.onreadystatechange = function() {
+                if (xmlhttp.readyState==4 && xmlhttp.status==200) {
+                    sessionStorage["popeTable"] = xmlhttp.responseText;
+                    pope();
+                }
+            }
+            xmlhttp.open("GET", "http://bloodbrothersgame.wikia.com/wiki/POPE_Stats_Table", true);
             xmlhttp.send();
-            sessionStorage["popeTable"] = xmlhttp.responseText;
             console.log("Fetching POPE table");
         }
-        // parse the response text into DOM
-        var doc = document.implementation.createHTMLDocument("POPE");
-        doc.documentElement.innerHTML = sessionStorage["popeTable"];
+        else {
+            pope();
+        }
 
-        var famName = (document.getElementById("WikiaPageHeader").getElementsByTagName("h1"))[0].innerHTML.trim();
-        var table = (doc.getElementsByClassName("wikitable"))[0];
-        var rows = (table.getElementsByTagName("tbody"))[0].getElementsByTagName("tr");
+        function pope() {
+            // parse the response text into DOM
+            var doc = document.implementation.createHTMLDocument("POPE");
+            doc.documentElement.innerHTML = sessionStorage["popeTable"];
 
-        for (var i = rows.length - 1; i >= 2; i--) {
-            try {
-                var cells = rows[i].getElementsByTagName("td");
-                var cellFam = (cells[1].innerText || cells[1].textContent).trim();
-                if (cellFam == famName) {
-                    data.hpPOPE  = parseInt((cells[3].innerText || cells[3].textContent).replace(/,/g, ""));
-                    data.atkPOPE = parseInt((cells[4].innerText || cells[4].textContent).replace(/,/g, ""));
-                    data.defPOPE = parseInt((cells[5].innerText || cells[5].textContent).replace(/,/g, ""));
-                    data.wisPOPE = parseInt((cells[6].innerText || cells[6].textContent).replace(/,/g, ""));
-                    data.agiPOPE = parseInt((cells[7].innerText || cells[7].textContent).replace(/,/g, ""));
-                }
-            } catch (e) {}
+            var famName = (document.getElementById("WikiaPageHeader").getElementsByTagName("h1"))[0].innerHTML.trim();
+            var table = (doc.getElementsByClassName("wikitable"))[0];
+            var rows = (table.getElementsByTagName("tbody"))[0].getElementsByTagName("tr");
+
+            for (var i = rows.length - 1; i >= 2; i--) {
+                try {
+                    var cells = rows[i].getElementsByTagName("td");
+                    var cellFam = (cells[1].innerText || cells[1].textContent).trim();
+                    if (cellFam == famName) {
+                        data.hpPOPE  = parseInt((cells[3].innerText || cells[3].textContent).replace(/,/g, ""));
+                        data.atkPOPE = parseInt((cells[4].innerText || cells[4].textContent).replace(/,/g, ""));
+                        data.defPOPE = parseInt((cells[5].innerText || cells[5].textContent).replace(/,/g, ""));
+                        data.wisPOPE = parseInt((cells[6].innerText || cells[6].textContent).replace(/,/g, ""));
+                        data.agiPOPE = parseInt((cells[7].innerText || cells[7].textContent).replace(/,/g, ""));
+                    }
+                } catch (e) {}
+            }
+            if (displayPOPE) addPOPEStats();
+            if (displayTotalPE || displayTotalPOPE) addTotalStats();
         }
     }
 }
@@ -152,41 +169,117 @@ function addTotalStats() {
     //rowPE.innerHTML += addedPETotalText;
 }
 
-function getTierInfo (category) {
+/*
+* Initially, call getPvP(), which has getRaid() as callback,
+*                 getRaid() has getTower() as callback
+*    and finally, getTower() has addTierInfo() as callback
+* Ideally, getPvP(), getRaid() and getTower() should be done in parallel instead of 
+* being done serially like this, but that's for later
+*/
+function getTierInfo () {
 
-    // fetch the tier page
-    if (sessionStorage[category] == null) {
-        var xmlhttp = new XMLHttpRequest();
-        xmlhttp.open("GET", tierURL[category], false);
-        xmlhttp.send();
-        sessionStorage[category] = xmlhttp.responseText;
-        console.log("Fetching " + category + " tier");
-    }
-    // parse the response text into DOM
-    var doc = document.implementation.createHTMLDocument("Tier");
-    doc.documentElement.innerHTML = sessionStorage[category];
-
-    var tables = doc.getElementsByClassName("wikitable");
-
-    var tierResult = "N/A";
-    var tiers = ['X', 'S+', 'S', 'A+', 'A', 'B', 'C', 'D', 'E'];
-    var famName = (document.getElementById("WikiaPageHeader").getElementsByTagName("h1"))[0].innerHTML;
-
-    for (var i = 0; i < 9; i++){ // 9 tables
-        var items = tables[i].innerHTML;
-        if (items.indexOf(famName) != -1) {
-            tierResult = tiers[i];
-            break;
+    function getPvP() {
+        // fetch the pvp tier page
+        if (sessionStorage["pvp"] == null) {
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.onreadystatechange = function() {
+                if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                    sessionStorage["pvp"] = xmlhttp.responseText;
+                    data.pvp = getTier("pvp");
+                    getRaid();
+                }
+            }
+            xmlhttp.open("GET", tierURL["pvp"], true);
+            xmlhttp.send();
+            sessionStorage["pvp"] = xmlhttp.responseText;
+            console.log("Fetching pvp tier");
+        }
+        else {
+            data.pvp = getTier("pvp");
+            getRaid();
         }
     }
-    return tierResult;
+
+    function getRaid() {
+        // fetch the raid tier page
+        if (sessionStorage["raid"] == null) {
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.onreadystatechange = function() {
+                if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                    sessionStorage["raid"] = xmlhttp.responseText;
+                    data.raid = getTier("raid");
+                    getTower();
+                }
+            }
+            xmlhttp.open("GET", tierURL["raid"], true);
+            xmlhttp.send();
+            sessionStorage["raid"] = xmlhttp.responseText;
+            console.log("Fetching raid tier");
+        }
+        else {
+            data.raid = getTier("raid");
+            getTower();
+        }
+    }
+
+    function getTower() {
+        // fetch the tower tier page
+        if (sessionStorage["tower"] == null) {
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.onreadystatechange = function() {
+                if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                    sessionStorage["tower"] = xmlhttp.responseText;
+                    data.tower = getTier("tower");
+                    addTierInfo();
+                }
+            }
+            xmlhttp.open("GET", tierURL["tower"], true);
+            xmlhttp.send();
+            sessionStorage["tower"] = xmlhttp.responseText;
+            console.log("Fetching tower tier");
+        }
+        else {
+            data.tower = getTier("tower");
+            addTierInfo();
+        }
+    }
+
+    function getTier(category) {
+        // parse the response text into DOM
+        var doc = document.implementation.createHTMLDocument("Tier");
+        doc.documentElement.innerHTML = sessionStorage[category];
+
+        var tables = doc.getElementsByClassName("wikitable");
+
+        var tierResult = "N/A";
+        var tiers = ['X', 'S+', 'S', 'A+', 'A', 'B', 'C', 'D', 'E'];
+        var famName = (document.getElementById("WikiaPageHeader").getElementsByTagName("h1"))[0].innerHTML;
+
+        for (var i = 0; i < 9; i++){ // 9 tables
+            var items = tables[i].innerHTML;
+            if (items.indexOf(famName) != -1) {
+                tierResult = tiers[i];
+                break;
+            }
+        }
+        return tierResult;
+    }
+
+    getPvP();
 }
 
+/*
+* Add the tier info row to the stat table
+* This has to be called AFTER the tiers info have all been fetched
+*/
 function addTierInfo () {
     var table = (document.getElementsByClassName("article-table"))[0];
 
     var newText = "<tr>" + 
-            "<td style='text-align:center;padding:0em;'><span style='border-bottom: 1px dotted; font-weight: bold; padding: 0em' title='PVP tier'><a>PVP</a></span></td><td>" + getTierInfo("pvp") + "</td><td style='text-align:center;padding:0em;'><span style='border-bottom: 1px dotted; font-weight: bold; padding: 0em' title='Raid tier'><a>Raid</a></span></td><td>" + getTierInfo("raid") + "</td><td style='text-align:center;padding:0em;'><span style='border-bottom: 1px dotted; font-weight: bold; padding: 0em' title='Tower tier'><a>Tower</a></span></td><td>" + getTierInfo("tower") + "</td></tr>";
+            "<td style='text-align:center;padding:0em;'><span style='border-bottom: 1px dotted; font-weight: bold; padding: 0em' title='PVP tier'><a>PVP</a></span></td><td>" 
+            + data.pvp + "</td><td style='text-align:center;padding:0em;'><span style='border-bottom: 1px dotted; font-weight: bold; padding: 0em' title='Raid tier'><a>Raid</a></span></td><td>" 
+            + data.raid + "</td><td style='text-align:center;padding:0em;'><span style='border-bottom: 1px dotted; font-weight: bold; padding: 0em' title='Tower tier'><a>Tower</a></span></td><td>" 
+            + data.tower + "</td></tr>";
      
     // add the new row to tbody
     (table.getElementsByTagName("tbody"))[0].innerHTML += newText;
@@ -194,55 +287,75 @@ function addTierInfo () {
 
 function addSkillInfo () {
 
-    // fetch the skill page
+    // get the list of skills
     var skillList = (((document.getElementsByClassName("infobox"))[0].getElementsByTagName("tr"))[3]).getElementsByTagName("a");
 
     var skillLink1 = skillList[0].getAttribute("href");
     if (sessionStorage[skillLink1] == null) {
         var xmlhttp = new XMLHttpRequest();
-        xmlhttp.open("GET", skillLink1, false);
-        xmlhttp.send();
-        sessionStorage[skillLink1] = xmlhttp.responseText;
+        xmlhttp.onreadystatechange = function() {
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                sessionStorage[skillLink1] = xmlhttp.responseText;
+                skill1();
+            }
+        }
+        xmlhttp.open("GET", skillLink1, true);
+        xmlhttp.send();        
+    }
+    else {
+        skill1();
     }
 
-    // parse the response text into DOM
-    var doc = document.implementation.createHTMLDocument("Skill");
-    doc.documentElement.innerHTML = sessionStorage[skillLink1];
+    function skill1 () {
+        // parse the response text into DOM
+        var doc = document.implementation.createHTMLDocument("Skill");
+        doc.documentElement.innerHTML = sessionStorage[skillLink1];
 
-    // get the skill info box
-    var infoBox = (doc.getElementsByClassName("infobox"))[0];
+        // get the skill info box
+        var infoBox = (doc.getElementsByClassName("infobox"))[0];
 
-    // insert the skill box to the side
-    var searchBox = document.getElementById("WikiaSearch");
-    var addedSkillBox1 = searchBox.parentNode.insertBefore(infoBox, searchBox.nextSibling);
+        // insert the skill box to the side
+        var searchBox = document.getElementById("WikiaSearch");
+        searchBox.parentNode.insertBefore(infoBox, searchBox.nextSibling);
+    }
 
     // if there's a second skill, add it too
     if (!(typeof skillList[1] === 'undefined')) {
 
         var skillLink2 = skillList[1].getAttribute("href");
         if (sessionStorage[skillLink2] == null) {
-            xmlhttp.open("GET", skillLink2, false);
-            xmlhttp.send();
-            sessionStorage[skillLink2] = xmlhttp.responseText;
+            var xmlhttp2 = new XMLHttpRequest();
+            xmlhttp2.onreadystatechange = function() {
+                if (xmlhttp2.readyState == 4 && xmlhttp2.status == 200) {
+                    sessionStorage[skillLink2] = xmlhttp2.responseText;
+                    skill2();
+                }
+            }
+            xmlhttp2.open("GET", skillLink2, true);
+            xmlhttp2.send();            
+        }
+        else {
+            skill2();
         }
 
-        // parse the response text into DOM
-        doc = document.implementation.createHTMLDocument("Skill");
-        doc.documentElement.innerHTML = sessionStorage[skillLink2];
+        function skill2 () {
+            // parse the response text into DOM
+            doc = document.implementation.createHTMLDocument("Skill");
+            doc.documentElement.innerHTML = sessionStorage[skillLink2];
 
-        // get the skill info box
-        infoBox = (doc.getElementsByClassName("infobox"))[0];
+            // get the skill info box
+            infoBox = (doc.getElementsByClassName("infobox"))[0];
 
-        // insert the skill box to the side
-        addedSkillBox1.parentNode.insertBefore(infoBox, addedSkillBox1.nextSibling);
+            // insert the skill box to the side
+            var searchBox = document.getElementById("WikiaSearch");
+            searchBox.parentNode.insertBefore(infoBox, searchBox.nextSibling);
+        }
     }
 }
 
 try {
-    if (displayPOPE || displayTotalPE) getStats();
-    if (displayPOPE) addPOPEStats();
-    if (displayTotalPE || displayTotalPOPE) addTotalStats();
-    if (displayTier) addTierInfo();
+    if (displayPOPE || displayTotalPE) getStats();    
+    if (displayTier) getTierInfo();
     if (displaySkill) addSkillInfo();
 }
 catch (err) {
