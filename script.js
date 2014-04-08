@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         bb_extra
-// @version      0.6.5.1
+// @version      0.6.5.2
 // @description  Display extra information in the Blood Brothers wikia familiar pages
 // @include      http://bloodbrothersgame.wikia.com/wiki/*
 // @copyright    2014, Chin
@@ -62,6 +62,33 @@ function numberWithCommas(x) {
 }
 
 function getStats () {
+    
+    function pope() {
+        // parse the response text into DOM
+        var doc = document.implementation.createHTMLDocument("POPE");
+        doc.documentElement.innerHTML = sessionStorage.popeTable;
+        
+        var famName = (document.getElementById("WikiaPageHeader").getElementsByTagName("h1"))[0].innerHTML.trim();
+        var table = (doc.getElementsByClassName("wikitable"))[0];
+        var rows = (table.getElementsByTagName("tbody"))[0].getElementsByTagName("tr");
+        
+        for (var i = rows.length - 1; i >= 2; i--) {
+            try {
+                var cells = rows[i].getElementsByTagName("td");
+                var cellFam = (cells[1].innerText || cells[1].textContent).trim();
+                if (cellFam == famName) {
+                    data.hpPOPE  = parseInt((cells[3].innerText || cells[3].textContent).replace(/,/g, ""));
+                    data.atkPOPE = parseInt((cells[4].innerText || cells[4].textContent).replace(/,/g, ""));
+                    data.defPOPE = parseInt((cells[5].innerText || cells[5].textContent).replace(/,/g, ""));
+                    data.wisPOPE = parseInt((cells[6].innerText || cells[6].textContent).replace(/,/g, ""));
+                    data.agiPOPE = parseInt((cells[7].innerText || cells[7].textContent).replace(/,/g, ""));
+                }
+            } catch (e) {}
+        }
+        if (displayPOPE) addPOPEStats();
+        if (displayTotalPE || displayTotalPOPE) addTotalStats();
+    }
+    
     data.statTable = document.getElementsByClassName("article-table");
     var rowPE = ((data.statTable[0].getElementsByTagName("tbody"))[0].getElementsByTagName("tr"))[3];
     
@@ -90,32 +117,6 @@ function getStats () {
         }
         else {
             pope();
-        }
-
-        function pope() {
-            // parse the response text into DOM
-            var doc = document.implementation.createHTMLDocument("POPE");
-            doc.documentElement.innerHTML = sessionStorage.popeTable;
-
-            var famName = (document.getElementById("WikiaPageHeader").getElementsByTagName("h1"))[0].innerHTML.trim();
-            var table = (doc.getElementsByClassName("wikitable"))[0];
-            var rows = (table.getElementsByTagName("tbody"))[0].getElementsByTagName("tr");
-
-            for (var i = rows.length - 1; i >= 2; i--) {
-                try {
-                    var cells = rows[i].getElementsByTagName("td");
-                    var cellFam = (cells[1].innerText || cells[1].textContent).trim();
-                    if (cellFam == famName) {
-                        data.hpPOPE  = parseInt((cells[3].innerText || cells[3].textContent).replace(/,/g, ""));
-                        data.atkPOPE = parseInt((cells[4].innerText || cells[4].textContent).replace(/,/g, ""));
-                        data.defPOPE = parseInt((cells[5].innerText || cells[5].textContent).replace(/,/g, ""));
-                        data.wisPOPE = parseInt((cells[6].innerText || cells[6].textContent).replace(/,/g, ""));
-                        data.agiPOPE = parseInt((cells[7].innerText || cells[7].textContent).replace(/,/g, ""));
-                    }
-                } catch (e) {}
-            }
-            if (displayPOPE) addPOPEStats();
-            if (displayTotalPE || displayTotalPOPE) addTotalStats();
         }
     }
 }
@@ -314,6 +315,19 @@ function addSkillInfo () {
         var searchBox = document.getElementById("WikiaSearch");
         searchBox.parentNode.insertBefore(infoBox, searchBox.nextSibling);
     }
+    
+    function skill2 () {
+        // parse the response text into DOM
+        var doc = document.implementation.createHTMLDocument("Skill");
+        doc.documentElement.innerHTML = sessionStorage[skillLink2];
+        
+        // get the skill info box
+        var infoBox = (doc.getElementsByClassName("infobox"))[0];
+        
+        // insert the skill box to the side
+        var searchBox = document.getElementById("WikiaSearch");
+        searchBox.parentNode.insertBefore(infoBox, searchBox.nextSibling);
+    }
 
     // if there's a second skill, add it too
     if (!(typeof skillList[1] === 'undefined')) {
@@ -332,19 +346,6 @@ function addSkillInfo () {
         }
         else {
             skill2();
-        }
-
-        function skill2 () {
-            // parse the response text into DOM
-            var doc = document.implementation.createHTMLDocument("Skill");
-            doc.documentElement.innerHTML = sessionStorage[skillLink2];
-
-            // get the skill info box
-            var infoBox = (doc.getElementsByClassName("infobox"))[0];
-
-            // insert the skill box to the side
-            var searchBox = document.getElementById("WikiaSearch");
-            searchBox.parentNode.insertBefore(infoBox, searchBox.nextSibling);
         }
     }
 }
