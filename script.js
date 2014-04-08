@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         bb_extra
-// @version      0.6.5
+// @version      0.6.5.1
 // @description  Display extra information in the Blood Brothers wikia familiar pages
 // @include      http://bloodbrothersgame.wikia.com/wiki/*
 // @copyright    2014, Chin
@@ -52,17 +52,13 @@ var data = {
     isFinalEvolution: false
 };
 
-var tierURL = new Array();
-tierURL["pvp"]   = "http://bloodbrothersgame.wikia.com/index.php?title=Familiar_Tier_List/PvP&action=render";
-tierURL["raid"]  = "http://bloodbrothersgame.wikia.com/index.php?title=Familiar_Tier_List/Raid&action=render";
-tierURL["tower"] = "http://bloodbrothersgame.wikia.com/index.php?title=Familiar_Tier_List/Tower&action=render";
+var tierURL = [];
+tierURL.pvp   = "http://bloodbrothersgame.wikia.com/index.php?title=Familiar_Tier_List/PvP&action=render";
+tierURL.raid  = "http://bloodbrothersgame.wikia.com/index.php?title=Familiar_Tier_List/Raid&action=render";
+tierURL.tower = "http://bloodbrothersgame.wikia.com/index.php?title=Familiar_Tier_List/Tower&action=render";
 
 function numberWithCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
-
-function endsWith(str, suffix) {
-    return str.indexOf(suffix, str.length - suffix.length) !== -1;
 }
 
 function getStats () {
@@ -80,14 +76,14 @@ function getStats () {
 
     if (data.isFinalEvolution) {
         // fetch the POPE stat table
-        if (sessionStorage["popeTable"] == null) {
+        if (sessionStorage.popeTable == null) {
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.onreadystatechange = function() {
                 if (xmlhttp.readyState==4 && xmlhttp.status==200) {
-                    sessionStorage["popeTable"] = xmlhttp.responseText;
+                    sessionStorage.popeTable = xmlhttp.responseText;
                     pope();
                 }
-            }
+            };
             xmlhttp.open("GET", "http://bloodbrothersgame.wikia.com/wiki/POPE_Stats_Table", true);
             xmlhttp.send();
             console.log("Fetching POPE table");
@@ -99,7 +95,7 @@ function getStats () {
         function pope() {
             // parse the response text into DOM
             var doc = document.implementation.createHTMLDocument("POPE");
-            doc.documentElement.innerHTML = sessionStorage["popeTable"];
+            doc.documentElement.innerHTML = sessionStorage.popeTable;
 
             var famName = (document.getElementById("WikiaPageHeader").getElementsByTagName("h1"))[0].innerHTML.trim();
             var table = (doc.getElementsByClassName("wikitable"))[0];
@@ -180,18 +176,18 @@ function getTierInfo () {
 
     function getPvP() {
         // fetch the pvp tier page
-        if (sessionStorage["pvp"] == null) {
+        if (sessionStorage.pvp == null) {
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.onreadystatechange = function() {
                 if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                    sessionStorage["pvp"] = xmlhttp.responseText;
+                    sessionStorage.pvp = xmlhttp.responseText;
                     data.pvp = getTier("pvp");
                     getRaid();
                 }
-            }
-            xmlhttp.open("GET", tierURL["pvp"], true);
+            };
+            xmlhttp.open("GET", tierURL.pvp, true);
             xmlhttp.send();
-            sessionStorage["pvp"] = xmlhttp.responseText;
+            sessionStorage.pvp = xmlhttp.responseText;
             console.log("Fetching pvp tier");
         }
         else {
@@ -202,18 +198,18 @@ function getTierInfo () {
 
     function getRaid() {
         // fetch the raid tier page
-        if (sessionStorage["raid"] == null) {
+        if (sessionStorage.raid == null) {
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.onreadystatechange = function() {
                 if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                    sessionStorage["raid"] = xmlhttp.responseText;
+                    sessionStorage.raid = xmlhttp.responseText;
                     data.raid = getTier("raid");
                     getTower();
                 }
-            }
-            xmlhttp.open("GET", tierURL["raid"], true);
+            };
+            xmlhttp.open("GET", tierURL.raid, true);
             xmlhttp.send();
-            sessionStorage["raid"] = xmlhttp.responseText;
+            sessionStorage.raid = xmlhttp.responseText;
             console.log("Fetching raid tier");
         }
         else {
@@ -224,18 +220,18 @@ function getTierInfo () {
 
     function getTower() {
         // fetch the tower tier page
-        if (sessionStorage["tower"] == null) {
+        if (sessionStorage.tower == null) {
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.onreadystatechange = function() {
                 if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                    sessionStorage["tower"] = xmlhttp.responseText;
+                    sessionStorage.tower = xmlhttp.responseText;
                     data.tower = getTier("tower");
                     addTierInfo();
                 }
-            }
-            xmlhttp.open("GET", tierURL["tower"], true);
+            };
+            xmlhttp.open("GET", tierURL.tower, true);
             xmlhttp.send();
-            sessionStorage["tower"] = xmlhttp.responseText;
+            sessionStorage.tower = xmlhttp.responseText;
             console.log("Fetching tower tier");
         }
         else {
@@ -298,7 +294,7 @@ function addSkillInfo () {
                 sessionStorage[skillLink1] = xmlhttp.responseText;
                 skill1();
             }
-        }
+        };
         xmlhttp.open("GET", skillLink1, true);
         xmlhttp.send();        
     }
@@ -330,7 +326,7 @@ function addSkillInfo () {
                     sessionStorage[skillLink2] = xmlhttp2.responseText;
                     skill2();
                 }
-            }
+            };
             xmlhttp2.open("GET", skillLink2, true);
             xmlhttp2.send();            
         }
@@ -340,11 +336,11 @@ function addSkillInfo () {
 
         function skill2 () {
             // parse the response text into DOM
-            doc = document.implementation.createHTMLDocument("Skill");
+            var doc = document.implementation.createHTMLDocument("Skill");
             doc.documentElement.innerHTML = sessionStorage[skillLink2];
 
             // get the skill info box
-            infoBox = (doc.getElementsByClassName("infobox"))[0];
+            var infoBox = (doc.getElementsByClassName("infobox"))[0];
 
             // insert the skill box to the side
             var searchBox = document.getElementById("WikiaSearch");
