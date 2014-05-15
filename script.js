@@ -75,13 +75,13 @@ function getStats () {
         for (var i = rows.length - 1; i >= 2; i--) {
             try {
                 var cells = rows[i].getElementsByTagName("td");
-                var cellFam = (cells[1].innerText || cells[1].textContent).trim();
+                var cellFam = (cells[2].innerText || cells[2].textContent).trim();
                 if (cellFam == famName) {
-                    data.hpPOPE  = parseInt((cells[3].innerText || cells[3].textContent).replace(/,/g, ""));
-                    data.atkPOPE = parseInt((cells[4].innerText || cells[4].textContent).replace(/,/g, ""));
-                    data.defPOPE = parseInt((cells[5].innerText || cells[5].textContent).replace(/,/g, ""));
-                    data.wisPOPE = parseInt((cells[6].innerText || cells[6].textContent).replace(/,/g, ""));
-                    data.agiPOPE = parseInt((cells[7].innerText || cells[7].textContent).replace(/,/g, ""));
+                    data.hpPOPE  = parseInt((cells[5].innerText || cells[5].textContent).replace(/,/g, ""));
+                    data.atkPOPE = parseInt((cells[6].innerText || cells[6].textContent).replace(/,/g, ""));
+                    data.defPOPE = parseInt((cells[7].innerText || cells[7].textContent).replace(/,/g, ""));
+                    data.wisPOPE = parseInt((cells[8].innerText || cells[8].textContent).replace(/,/g, ""));
+                    data.agiPOPE = parseInt((cells[9].innerText || cells[9].textContent).replace(/,/g, ""));
                 }
             } catch (e) {}
         }
