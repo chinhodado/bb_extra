@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         bb_extra
-// @version      0.6.5.3
+// @version      0.6.6
 // @description  Display extra information in the Blood Brothers wikia familiar pages
 // @include      http://bloodbrothersgame.wikia.com/wiki/*
 // @copyright    2014, Chin
@@ -61,9 +61,18 @@ function numberWithCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
+function endsWith(str, suffix) {
+    return str.indexOf(suffix, str.length - suffix.length) !== -1;
+}
+
 function getStats () {
+
+    function onFinishCalculatedPOPE() {
+        if (displayPOPE) addPOPEStats();
+        if (displayTotalPE || displayTotalPOPE) addTotalStats();
+    }
     
-    function pope() {
+    function getPOPEFromTable() {
         // parse the response text into DOM
         var doc = document.implementation.createHTMLDocument("POPE");
         doc.documentElement.innerHTML = sessionStorage.popeTable;
@@ -85,8 +94,7 @@ function getStats () {
                 }
             } catch (e) {}
         }
-        if (displayPOPE) addPOPEStats();
-        if (displayTotalPE || displayTotalPOPE) addTotalStats();
+        onFinishCalculatedPOPE();
     }
     
     data.statTable = document.getElementsByClassName("article-table");
@@ -102,21 +110,56 @@ function getStats () {
     data.isFinalEvolution = (document.getElementsByClassName("container")[0]).innerHTML.indexOf("Final Evolution") != -1;
 
     if (data.isFinalEvolution) {
-        // fetch the POPE stat table
-        if (sessionStorage.popeTable == null) {
-            var xmlhttp = new XMLHttpRequest();
-            xmlhttp.onreadystatechange = function() {
-                if (xmlhttp.readyState==4 && xmlhttp.status==200) {
-                    sessionStorage.popeTable = xmlhttp.responseText;
-                    pope();
-                }
-            };
-            xmlhttp.open("GET", "http://bloodbrothersgame.wikia.com/wiki/POPE_Stats_Table", true);
-            xmlhttp.send();
-            console.log("Fetching POPE table");
+        data.category = ((document.getElementsByClassName("name"))[0].getElementsByTagName("a"))[0].childNodes[0].nodeValue;
+        var toAdd = 0;
+        if (endsWith(data.category, "1")) toAdd = 500;      // 1 star
+        else if (endsWith(data.category, "2")) toAdd = 550; // 2 star
+        else if (endsWith(data.category, "3")) toAdd = 605; // 3 star
+
+        if (endsWith(data.category, "1")) {
+            // we generally don't care about the max stats, but in this case (1 star) we do
+            var rowMax = ((data.statTable[0].getElementsByTagName("tbody"))[0].getElementsByTagName("tr"))[2];
+            data.hpMax  = parseInt((rowMax.getElementsByTagName("td"))[1].childNodes[0].nodeValue.replace(/,/g, ""));
+            data.atkMax = parseInt((rowMax.getElementsByTagName("td"))[2].childNodes[0].nodeValue.replace(/,/g, ""));
+            data.defMax = parseInt((rowMax.getElementsByTagName("td"))[3].childNodes[0].nodeValue.replace(/,/g, ""));
+            data.wisMax = parseInt((rowMax.getElementsByTagName("td"))[4].childNodes[0].nodeValue.replace(/,/g, ""));
+            data.agiMax = parseInt((rowMax.getElementsByTagName("td"))[5].childNodes[0].nodeValue.replace(/,/g, ""));
+
+            data.hpPOPE  = data.hpMax  + toAdd;
+            data.atkPOPE = data.atkMax + toAdd;
+            data.defPOPE = data.defMax + toAdd;
+            data.wisPOPE = data.wisMax + toAdd;
+            data.agiPOPE = data.agiMax + toAdd;
+
+            onFinishCalculatedPOPE();
+        }
+        else if (!endsWith(data.category, "4")){
+            data.hpPOPE  = data.hpPE  + toAdd;
+            data.atkPOPE = data.atkPE + toAdd;
+            data.defPOPE = data.defPE + toAdd;
+            data.wisPOPE = data.wisPE + toAdd;
+            data.agiPOPE = data.agiPE + toAdd;
+
+            onFinishCalculatedPOPE();
         }
         else {
-            pope();
+            // only fetch the POPE stat table when it's a 4-star familiar
+            if (!sessionStorage.popeTable) {
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.onreadystatechange = function() {
+                    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                        sessionStorage.popeTable = xmlhttp.responseText;
+                        getPOPEFromTable();
+                    }
+                };
+                xmlhttp.open("GET", "http://bloodbrothersgame.wikia.com/wiki/POPE_Stats_Table", true);
+                xmlhttp.send();
+                console.log("Fetching POPE table");
+            }
+            else {
+                // already cached, just parse it and get the result
+                getPOPEFromTable();
+            }   
         }
     }
 }
@@ -177,7 +220,7 @@ function getTierInfo () {
 
     function getPvP() {
         // fetch the pvp tier page
-        if (sessionStorage.pvp == null) {
+        if (!sessionStorage.pvp) {
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.onreadystatechange = function() {
                 if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
@@ -199,7 +242,7 @@ function getTierInfo () {
 
     function getRaid() {
         // fetch the raid tier page
-        if (sessionStorage.raid == null) {
+        if (!sessionStorage.raid) {
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.onreadystatechange = function() {
                 if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
@@ -221,7 +264,7 @@ function getTierInfo () {
 
     function getTower() {
         // fetch the tower tier page
-        if (sessionStorage.tower == null) {
+        if (!sessionStorage.tower) {
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.onreadystatechange = function() {
                 if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
@@ -294,7 +337,7 @@ function addSkillInfo () {
     var skillList = (((document.getElementsByClassName("infobox"))[0].getElementsByTagName("tr"))[3]).getElementsByTagName("a");
 
     var skillLink1 = skillList[0].getAttribute("href");
-    if (sessionStorage[skillLink1] == null) {
+    if (!sessionStorage[skillLink1]) {
         var xmlhttp = new XMLHttpRequest();
         xmlhttp.onreadystatechange = function() {
             if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
@@ -339,7 +382,7 @@ function addSkillInfo () {
     if (!(typeof skillList[1] === 'undefined')) {
 
         var skillLink2 = skillList[1].getAttribute("href");
-        if (sessionStorage[skillLink2] == null) {
+        if (!sessionStorage[skillLink2]) {
             var xmlhttp2 = new XMLHttpRequest();
             xmlhttp2.onreadystatechange = function() {
                 if (xmlhttp2.readyState == 4 && xmlhttp2.status == 200) {
