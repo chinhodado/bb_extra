@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         bb_extra
-// @version      0.6.6
+// @version      0.6.7
 // @description  Display extra information in the Blood Brothers wikia familiar pages
 // @include      http://bloodbrothersgame.wikia.com/wiki/*
 // @copyright    2014, Chin
@@ -47,6 +47,9 @@ var data = {
     raidTier: "N/A",
     towerTier: "N/A",
 
+    price: "N/A",
+    priceDate:"",
+
     category: "",
     statTable: "",
     isFinalEvolution: false
@@ -72,6 +75,9 @@ function getStats () {
         if (displayTotalPE || displayTotalPOPE) addTotalStats();
     }
     
+    /**
+     * Parse the POPE info from the POPE table, then add it to our page
+     */
     function getPOPEFromTable() {
         // parse the response text into DOM
         var doc = document.implementation.createHTMLDocument("POPE");
@@ -96,6 +102,59 @@ function getStats () {
         }
         onFinishCalculatedPOPE();
     }
+
+    /**
+     * Parse the price info from MrMcSpankie's table and add it to our page
+     */
+    function getPriceFromTable1() {
+        // parse the response text into DOM
+        var doc = document.implementation.createHTMLDocument("PriceTable1");
+        doc.documentElement.innerHTML = sessionStorage.priceTable1;
+        
+        var famName = (document.getElementById("WikiaPageHeader").getElementsByTagName("h1"))[0].innerHTML.trim();
+        var tables = (doc.getElementsByClassName("wikitable"));
+
+        for (var i = tables.length - 1; i >= 0; i--) {
+            var rows = (tables[i].getElementsByTagName("tbody"))[0].getElementsByTagName("tr");
+            for (var j = rows.length - 1; j >= 0; j--) {
+                try {
+                    var cells = rows[j].getElementsByTagName("td");
+                    var cellFam = (cells[1].innerText || cells[1].textContent).trim();
+                    if (cellFam == famName) {
+                        data.price  = cells[7].innerText || cells[7].textContent;
+                    }
+                } catch (e) {}
+            }
+        }
+        addPrice();
+    }
+
+    /**
+     * Parce the price from GuitarRock's table and add it to our page
+     */
+    function getPriceFromTable2() {
+        // parse the response text into DOM
+        var doc = document.implementation.createHTMLDocument("PriceTable2");
+        doc.documentElement.innerHTML = sessionStorage.priceTable2;
+        
+        var famName = (document.getElementById("WikiaPageHeader").getElementsByTagName("h1"))[0].innerHTML.trim();
+        var tables = (doc.getElementsByClassName("wikitable"));
+
+        for (var i = tables.length - 1; i >= 0; i--) {
+            var rows = (tables[i].getElementsByTagName("tbody"))[0].getElementsByTagName("tr");
+            for (var j = rows.length - 1; j >= 0; j--) {
+                try {
+                    var cells = rows[j].getElementsByTagName("td");
+                    var cellFam = (cells[1].innerText || cells[1].textContent).trim();
+                    if (cellFam == famName) {
+                        data.price  = cells[2].innerText || cells[2].textContent;
+                        data.priceDate = cells[4].innerText || cells[4].textContent;
+                    }
+                } catch (e) {}
+            }
+        }
+        addPrice();
+    }
     
     data.statTable = document.getElementsByClassName("article-table");
     var rowPE = ((data.statTable[0].getElementsByTagName("tbody"))[0].getElementsByTagName("tr"))[3];
@@ -108,9 +167,9 @@ function getStats () {
     data.agiPE = parseInt((rowPE.getElementsByTagName("td"))[5].childNodes[0].nodeValue.replace(/,/g, ""));
 
     data.isFinalEvolution = (document.getElementsByClassName("container")[0]).innerHTML.indexOf("Final Evolution") != -1;
+    data.category = ((document.getElementsByClassName("name"))[0].getElementsByTagName("a"))[0].childNodes[0].nodeValue;
 
-    if (data.isFinalEvolution) {
-        data.category = ((document.getElementsByClassName("name"))[0].getElementsByTagName("a"))[0].childNodes[0].nodeValue;
+    if (data.isFinalEvolution) {        
         var toAdd = 0;
         if (endsWith(data.category, "1")) toAdd = 500;      // 1 star
         else if (endsWith(data.category, "2")) toAdd = 550; // 2 star
@@ -162,12 +221,52 @@ function getStats () {
             }   
         }
     }
-}
-
-function addPOPEStats() {
 
     if (data.isFinalEvolution) {
+        // get the price for the fully evolved
+        if (!sessionStorage.priceTable1) { // MrMcSpankie's table
+            var xmlhttp2 = new XMLHttpRequest();
+            xmlhttp2.onreadystatechange = function() {
+                if (xmlhttp2.readyState == 4 && xmlhttp2.status == 200) {
+                    sessionStorage.priceTable1 = xmlhttp2.responseText;
+                    getPriceFromTable1();
+                }
+            };
+            xmlhttp2.open("GET", "http://bloodbrothersgame.wikia.com/wiki/User:MrMcSpankie/Sandbox/PvPTier", true);
+            xmlhttp2.send();
+            console.log("Fetching MrMcSpankie's price table");
+        }
+        else {
+            // already cached, just parse it and get the result
+            getPriceFromTable1();
+        }
+    }
+    else {
+        // get the price for EP1/R1
+        if (!sessionStorage.priceTable2) { // GuitarRock's table
+            var xmlhttp3 = new XMLHttpRequest();
+            xmlhttp3.onreadystatechange = function() {
+                if (xmlhttp3.readyState == 4 && xmlhttp3.status == 200) {
+                    sessionStorage.priceTable2 = xmlhttp3.responseText;
+                    getPriceFromTable2();
+                }
+            };
+            xmlhttp3.open("GET", "http://bloodbrothersgame.wikia.com/wiki/User_blog:GuitarRock/Familiar%27s_Price_Reference_List", true);
+            xmlhttp3.send();
+            console.log("Fetching GuitarRock's price table");
+        }
+        else {
+            // already cached, just parse it and get the result
+            getPriceFromTable2();
+        }
+    }
+}
 
+/**
+ * Inject the POPE stats HTML into the page
+ */
+function addPOPEStats() {
+    if (data.isFinalEvolution) {
         var newText = "<tr><td style='text-align:center;padding:0em;'><span style='border-bottom: 1px dotted; font-weight: bold; padding: 0em' title='POPE stats (OPE400 for EP4, OPE100 for EP2, L2, L3 and M2)'><a>POPE</a></span></td><td>"
                         + numberWithCommas(data.hpPOPE) + "</td><td>"
                         + numberWithCommas(data.atkPOPE) + "</td><td>"
@@ -179,7 +278,25 @@ function addPOPEStats() {
         (data.statTable[0].getElementsByTagName("tbody"))[0].innerHTML += newText;
     }
 }
- 
+
+/**
+ * Inject the price HTML into the page
+ */
+function addPrice() {
+    var newText = "<tr><td style='text-align:center;padding:0em;'><span style='border-bottom: 1px dotted; font-weight: bold; padding: 0em' title='Price or value of the familiar in GH'><a>Price</a></span></td><td>"
+                    + "</td><td>"
+                    + "</td><td>"
+                    + "</td><td>"
+                    + data.priceDate + "</td><td>"
+                    + data.price + "</td></tr>";
+     
+    // add the new row to tbody
+    (data.statTable[0].getElementsByTagName("tbody"))[0].innerHTML += newText;
+}
+
+/**
+ * Inject the total stats HTML into the page
+ */
 function addTotalStats() {
      
     var totalPE = data.hpPE + data.atkPE + data.defPE + data.wisPE + data.agiPE;
