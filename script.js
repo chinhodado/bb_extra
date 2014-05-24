@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         bb_extra
-// @version      0.6.7
+// @version      0.6.7.1
 // @description  Display extra information in the Blood Brothers wikia familiar pages
 // @include      http://bloodbrothersgame.wikia.com/wiki/*
 // @copyright    2014, Chin
@@ -17,7 +17,6 @@ var displayTotalPE     = true;
 var displayTotalPOPE   = true;
 var displayTier        = true;
 var displaySkill       = true;
-var displayPOPE        = true;
 
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -71,7 +70,6 @@ function endsWith(str, suffix) {
 function getStats () {
 
     function onFinishCalculatedPOPE() {
-        if (displayPOPE) addPOPEStats();
         if (displayTotalPE || displayTotalPOPE) addTotalStats();
     }
     
@@ -259,23 +257,6 @@ function getStats () {
             // already cached, just parse it and get the result
             getPriceFromTable2();
         }
-    }
-}
-
-/**
- * Inject the POPE stats HTML into the page
- */
-function addPOPEStats() {
-    if (data.isFinalEvolution) {
-        var newText = "<tr><td style='text-align:center;padding:0em;'><span style='border-bottom: 1px dotted; font-weight: bold; padding: 0em' title='POPE stats (OPE400 for EP4, OPE100 for EP2, L2, L3 and M2)'><a>POPE</a></span></td><td>"
-                        + numberWithCommas(data.hpPOPE) + "</td><td>"
-                        + numberWithCommas(data.atkPOPE) + "</td><td>"
-                        + numberWithCommas(data.defPOPE) + "</td><td>"
-                        + numberWithCommas(data.wisPOPE) + "</td><td>"
-                        + numberWithCommas(data.agiPOPE) + "</td></tr>";
-         
-        // add the new row to tbody
-        (data.statTable[0].getElementsByTagName("tbody"))[0].innerHTML += newText;
     }
 }
 
@@ -517,7 +498,7 @@ function addSkillInfo () {
 }
 
 try {
-    if (displayPOPE || displayTotalPE) getStats();    
+    getStats();    
     if (displayTier) getTierInfo();
     if (displaySkill) addSkillInfo();
 }
