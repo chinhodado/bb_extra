@@ -278,6 +278,7 @@ function getTierInfo () {
     function getTier(category) {
         // parse the response text into DOM
         var tierResult = "N/A";
+        var tierTable = "";
         var doc = document.implementation.createHTMLDocument("Tier");
         doc.documentElement.innerHTML = sessionStorage[category];
 
@@ -287,15 +288,17 @@ function getTierInfo () {
             return tierResult;
         }
 
-        var tiers = ['X', 'S+', 'S', 'A+', 'A', 'B', 'C', 'D', 'E'];
+        //var tiers = ['X', 'S+', 'S', 'A+', 'A', 'B', 'C', 'D', 'E'];
         var famName = (document.getElementById("WikiaPageHeader").getElementsByTagName("h1"))[0].innerHTML;
 
-        for (var i = 0; i < 9; i++){ // 9 tables
+        for (var i = 0; i < tables.length; i++){ // 9 tables
             if (!tables[i])
                 break;
             var items = tables[i].innerHTML;
             if (items.indexOf(famName) != -1) {
-                tierResult = tiers[i];
+                tierTable = tables[i].id;
+                tierResult = tierTable.substr(5).replace(".2B", "+");
+                console.log("Tier: " + tierResult);
                 break;
             }
         }
