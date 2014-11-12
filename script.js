@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         bb_extra
-// @version      0.6.7.2
+// @version      0.6.8
 // @description  Display extra information in the Blood Brothers wikia familiar pages
 // @include      http://bloodbrothersgame.wikia.com/wiki/*
 // @copyright    2014, Chin
@@ -288,10 +288,9 @@ function getTierInfo () {
             return tierResult;
         }
 
-        //var tiers = ['X', 'S+', 'S', 'A+', 'A', 'B', 'C', 'D', 'E'];
         var famName = (document.getElementById("WikiaPageHeader").getElementsByTagName("h1"))[0].innerHTML;
 
-        for (var i = 0; i < tables.length; i++){ // 9 tables
+        for (var i = 0; i < tables.length; i++){
             if (!tables[i])
                 break;
             var items = tables[i].innerHTML;
