@@ -354,8 +354,9 @@ function addSkillInfo () {
         var infoBox = (doc.getElementsByClassName("infobox"))[0];
 
         // insert the skill box to the side
-        var searchBox = document.getElementById("WikiaSearch");
-        searchBox.parentNode.insertBefore(infoBox, searchBox.nextSibling);
+        var content = document.getElementsByClassName("WikiaPageContentWrapper")[0];
+        var rail = document.getElementById("WikiaRail");
+        content.insertBefore(infoBox, rail)
     }
     
     function skill2 () {
@@ -367,8 +368,9 @@ function addSkillInfo () {
         var infoBox = (doc.getElementsByClassName("infobox"))[0];
         
         // insert the skill box to the side
-        var searchBox = document.getElementById("WikiaSearch");
-        searchBox.parentNode.insertBefore(infoBox, searchBox.nextSibling);
+        var content = document.getElementsByClassName("WikiaPageContentWrapper")[0];
+        var rail = document.getElementById("WikiaRail");
+        content.insertBefore(infoBox, rail)
     }
 
     // if there's a second skill, add it too
